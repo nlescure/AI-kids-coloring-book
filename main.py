@@ -8,6 +8,33 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Set page configuration and custom CSS
+st.set_page_config(page_title="Kids' Coloring Image Generator", page_icon="🖍️")
+
+st.markdown("""
+    <style>
+    .stApp {
+        background-image: linear-gradient(to right top, #ff9a9e, #fad0c4, #ffecd2);
+        color: #333333;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+    }
+    .stTextInput>div>div>input {
+        background-color: rgba(255, 255, 255, 0.8);
+        color: #333333;
+    }
+    h1 {
+        color: #333333;
+    }
+    .stTextInput label {
+        color: #666666;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 def generate_image(prompt):
     # Get API key from environment variable
     api_key = os.getenv("OPENAI_API_KEY")
@@ -44,7 +71,7 @@ def generate_image(prompt):
         st.error(f"An error occurred while calling the API: {str(e)}")
         return None
 
-st.title("Kids' Coloring Image Generator")
+st.title("🎨 Kids' Coloring Image Generator")
 
 # Use session state to store the prompt
 if 'prompt' not in st.session_state:
@@ -80,4 +107,11 @@ if st.button("Generate Image"):
     else:
         st.warning("Please enter a description first.")
 
-st.markdown("**Instructions:** Type a description of what you want to see in the image, then click 'Generate Image'. The AI will create a simple, black and white line drawing perfect for coloring!")
+st.markdown("""
+    **Instructions:** 
+    1. Type a fun description of what you want to see in the image.
+    2. Click 'Generate Image' to create a magical coloring page!
+    3. Download and print the image for endless coloring fun!
+    
+    Let your imagination run wild and happy coloring! 🌈✏️
+""")
