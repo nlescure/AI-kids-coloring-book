@@ -63,23 +63,25 @@ translations = {
             
             Let your imagination run wild and happy coloring! 🌈✏️
         """,
-        'image_prompt': "You are a teacher for young kids (3 years old). In the style of a coloring book for kids, generate a simple, black and white line drawing for kids to color: {prompt}. Never add texts in the image."
+        'image_prompt': "You are a teacher for young kids (3 years old). In the style of a coloring book for kids, generate a simple, black and white line drawing for kids to color: {prompt}. Never add texts in the image.",
+        'input_placeholder': "e.g., a flying unicorn in front of a big and old castle"
     },
     'fr': {
         'language': 'Langue',
-        'title': "🎨 Générateur d'Images à Colorier pour Enfants",
+        'title': "🎨 Générateur d'images à colorier pour enfants",
         'input_prompt': "Entrez une description de l'image que vous souhaitez générer :",
         'generate_button': "Générer l'Image",
         'download_button': "Télécharger l'Image",
         'instructions': """
             **Instructions :** 
             1. Tapez une description amusante de ce que vous voulez voir dans l'image.
-            2. Cliquez sur 'Générer l'Image' pour créer une page de coloriage magique !
+            2. Cliquez sur 'Générer l'image' pour créer une page de coloriage magique !
             3. Téléchargez et imprimez l'image pour un plaisir de coloriage sans fin !
             
             Laissez libre cours à votre imagination et bon coloriage ! 🌈✏️
         """,
-        'image_prompt': "Vous êtes un enseignant pour jeunes enfants (3 ans). Dans le style d'un livre de coloriage pour enfants, générez un dessin simple en noir et blanc à colorier : {prompt}. N'ajoutez jamais de texte dans l'image."
+        'image_prompt': "Tu es un enseignant pour jeunes enfants (3 ans). Dans le style d'un livre de coloriage pour enfants, génére un dessin simple en noir et blanc à colorier : {prompt}. N'ajoute jamais de texte dans l'image.",
+        'input_placeholder': "ex : une licorne volante devant un grand et vieux château"
     }
 }
 
@@ -90,14 +92,30 @@ st.markdown("""
         background-image: linear-gradient(to right top, #ff9a9e, #fad0c4, #ffecd2);
         color: #333333;
     }
-    .stButton>button {
+    .stButton, .stDownloadButton {
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+    .stButton>button, .stDownloadButton>button {
         background-color: #4CAF50;
         color: white;
         font-weight: bold;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.3rem;
+        transition: all 0.2s ease-in-out;
+    }
+    .stButton>button:hover, .stDownloadButton>button:hover {
+        color: #cccccc;
     }
     .stTextInput>div>div>input {
         background-color: rgba(255, 255, 255, 0.8);
         color: #333333;
+    }
+    .stTextInput>div>div>input::placeholder {
+        color: #999999;
+        opacity: 1;
     }
     h1 {
         color: #333333;
@@ -112,10 +130,23 @@ st.markdown("""
         margin-bottom: 20px;
     }
     .language-selector .stSelectbox {
-        width: 150px;
+        width: 180px;
     }
     .language-selector .stSelectbox > div > div {
         padding: 2px 10px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid #333;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -141,33 +172,45 @@ st.title(t['title'])
 if 'prompt' not in st.session_state:
     st.session_state.prompt = ''
 
-prompt = st.text_input(t['input_prompt'], value=st.session_state.prompt)
+prompt = st.text_input(
+    t['input_prompt'],
+    value=st.session_state.get('prompt', ''),
+    placeholder=t['input_placeholder']
+)
 
 # Update session state when prompt changes
 if prompt != st.session_state.prompt:
     st.session_state.prompt = prompt
 
+def custom_spinner():
+    spinner_html = """
+        <div class="spinner"></div>
+        <p style="text-align: center;">Generating image...</p>
+    """
+    return st.markdown(spinner_html, unsafe_allow_html=True)
+
 if st.button(t['generate_button']):
     if prompt:
-        with st.spinner("Generating image..."):
-            image = generate_image(prompt)
-            if image:
-                st.image(image, caption="Generated coloring image", use_column_width=True)
-                
-                # Convert the image to bytes
-                img_byte_arr = io.BytesIO()
-                image.save(img_byte_arr, format='PNG')
-                img_byte_arr = img_byte_arr.getvalue()
-                
-                # Create a download button
-                st.download_button(
-                    label=t['download_button'],
-                    data=img_byte_arr,
-                    file_name="coloring_image.png",
-                    mime="image/png"
-                )
-            else:
-                st.error("Failed to generate image. Please try again.")
+        spinner = custom_spinner()
+        image = generate_image(prompt)
+        spinner.empty()  # Remove the spinner
+        if image:
+            st.image(image, caption="Generated coloring image", use_column_width=True)
+            
+            # Convert the image to bytes
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            # Create a download button
+            st.download_button(
+                label=t['download_button'],
+                data=img_byte_arr,
+                file_name="coloring_image.png",
+                mime="image/png",
+            )
+        else:
+            st.error("Failed to generate image. Please try again.")
     else:
         st.warning("Please enter a description first.")
 
