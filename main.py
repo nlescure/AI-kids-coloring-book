@@ -8,33 +8,6 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Set page configuration and custom CSS
-st.set_page_config(page_title="Kids' Coloring Image Generator", page_icon="🖍️")
-
-st.markdown("""
-    <style>
-    .stApp {
-        background-image: linear-gradient(to right top, #ff9a9e, #fad0c4, #ffecd2);
-        color: #333333;
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        font-weight: bold;
-    }
-    .stTextInput>div>div>input {
-        background-color: rgba(255, 255, 255, 0.8);
-        color: #333333;
-    }
-    h1 {
-        color: #333333;
-    }
-    .stTextInput label {
-        color: #666666;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
 def generate_image(prompt):
     # Get API key from environment variable
     api_key = os.getenv("OPENAI_API_KEY")
@@ -71,19 +44,110 @@ def generate_image(prompt):
         st.error(f"An error occurred while calling the API: {str(e)}")
         return None
 
-st.title("🎨 Kids' Coloring Image Generator")
+# Set page configuration first
+st.set_page_config(page_title="Kids' Coloring Image Generator", page_icon="🖍️")
+
+# Translations
+translations = {
+    'en': {
+        'language': 'Language',
+        'title': "🎨 Kids' Coloring Image Generator",
+        'input_prompt': "Enter a description of the image you want to generate:",
+        'generate_button': "Generate Image",
+        'download_button': "Download Image",
+        'instructions': """
+            **Instructions:** 
+            1. Type a fun description of what you want to see in the image.
+            2. Click 'Generate Image' to create a magical coloring page!
+            3. Download and print the image for endless coloring fun!
+            
+            Let your imagination run wild and happy coloring! 🌈✏️
+        """,
+        'image_prompt': "You are a teacher for young kids (3 years old). In the style of a coloring book for kids, generate a simple, black and white line drawing for kids to color: {prompt}. Never add texts in the image."
+    },
+    'fr': {
+        'language': 'Langue',
+        'title': "🎨 Générateur d'Images à Colorier pour Enfants",
+        'input_prompt': "Entrez une description de l'image que vous souhaitez générer :",
+        'generate_button': "Générer l'Image",
+        'download_button': "Télécharger l'Image",
+        'instructions': """
+            **Instructions :** 
+            1. Tapez une description amusante de ce que vous voulez voir dans l'image.
+            2. Cliquez sur 'Générer l'Image' pour créer une page de coloriage magique !
+            3. Téléchargez et imprimez l'image pour un plaisir de coloriage sans fin !
+            
+            Laissez libre cours à votre imagination et bon coloriage ! 🌈✏️
+        """,
+        'image_prompt': "Vous êtes un enseignant pour jeunes enfants (3 ans). Dans le style d'un livre de coloriage pour enfants, générez un dessin simple en noir et blanc à colorier : {prompt}. N'ajoutez jamais de texte dans l'image."
+    }
+}
+
+# Custom CSS
+st.markdown("""
+    <style>
+    .stApp {
+        background-image: linear-gradient(to right top, #ff9a9e, #fad0c4, #ffecd2);
+        color: #333333;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+    }
+    .stTextInput>div>div>input {
+        background-color: rgba(255, 255, 255, 0.8);
+        color: #333333;
+    }
+    h1 {
+        color: #333333;
+        text-align: center;
+    }
+    .stTextInput label{
+        color: #666666;
+    }
+    .language-selector {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .language-selector .stSelectbox {
+        width: 150px;
+    }
+    .language-selector .stSelectbox > div > div {
+        padding: 2px 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Language selector
+st.markdown('<div class="language-selector">', unsafe_allow_html=True)
+language = st.selectbox(
+    '',
+    ['fr', 'en'],
+    format_func=lambda x: '🇫🇷 Français' if x == 'fr' else '🇬🇧 English',
+    key='language_selector',
+    index=0  # This sets the default to the first option, which is now 'fr'
+)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Use translations
+t = translations[language]
+
+# Title
+st.title(t['title'])
 
 # Use session state to store the prompt
 if 'prompt' not in st.session_state:
     st.session_state.prompt = ''
 
-prompt = st.text_input("Enter a description of the image you want to generate:", value=st.session_state.prompt)
+prompt = st.text_input(t['input_prompt'], value=st.session_state.prompt)
 
 # Update session state when prompt changes
 if prompt != st.session_state.prompt:
     st.session_state.prompt = prompt
 
-if st.button("Generate Image"):
+if st.button(t['generate_button']):
     if prompt:
         with st.spinner("Generating image..."):
             image = generate_image(prompt)
@@ -97,7 +161,7 @@ if st.button("Generate Image"):
                 
                 # Create a download button
                 st.download_button(
-                    label="Download Image",
+                    label=t['download_button'],
                     data=img_byte_arr,
                     file_name="coloring_image.png",
                     mime="image/png"
@@ -107,11 +171,4 @@ if st.button("Generate Image"):
     else:
         st.warning("Please enter a description first.")
 
-st.markdown("""
-    **Instructions:** 
-    1. Type a fun description of what you want to see in the image.
-    2. Click 'Generate Image' to create a magical coloring page!
-    3. Download and print the image for endless coloring fun!
-    
-    Let your imagination run wild and happy coloring! 🌈✏️
-""")
+st.markdown(t['instructions'])
